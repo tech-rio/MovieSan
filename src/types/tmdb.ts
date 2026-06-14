@@ -54,9 +54,23 @@ export interface TmdbVideo {
   official: boolean;
 }
 
+export interface TmdbImage {
+  file_path: string;
+  iso_639_1: string | null;
+  width: number;
+  height: number;
+}
+
+export interface TmdbImages {
+  logos?: TmdbImage[];
+  backdrops?: TmdbImage[];
+  posters?: TmdbImage[];
+}
+
 export interface TmdbDetails extends TmdbMovie {
   credits?: TmdbCredits;
   videos?: { results: TmdbVideo[] };
   similar?: TmdbPaged<TmdbMovie>;
   recommendations?: TmdbPaged<TmdbMovie>;
+  images?: TmdbImages;
 }

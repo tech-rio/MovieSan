@@ -29,7 +29,7 @@ export const tmdbDetails = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { tmdbFetch } = await import("./tmdb.server");
     return tmdbFetch<TmdbDetails>(`/${data.mediaType}/${data.id}`, {
-      append_to_response: "credits,videos,similar,recommendations",
+      append_to_response: "credits,videos,similar,recommendations,images",
     });
   });
 

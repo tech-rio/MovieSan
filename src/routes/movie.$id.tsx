@@ -95,6 +95,9 @@ function MovieDetails() {
   const voteCount = data.vote_count ? `${(data.vote_count / 1000).toFixed(1)}K` : "—";
   const releaseDate = data.release_date ? new Date(data.release_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
+  const logo = data.images?.logos && data.images.logos[0];
+  const logoUrl = logo ? `https://image.tmdb.org/t/p/w500${logo.file_path}` : null;
+
   const scrollCast = (dir: "left" | "right") => {
     if (castRef.current) {
       castRef.current.scrollBy({ left: dir === "right" ? 320 : -320, behavior: "smooth" });
@@ -104,7 +107,7 @@ function MovieDetails() {
   return (
     <div className="pb-20 min-h-screen">
       {/* ─── HERO SECTION ─── */}
-      <section className="relative min-h-[92vh] overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden">
         {/* Full bleed backdrop */}
         {data.backdrop_path && (
           <img
@@ -118,7 +121,7 @@ function MovieDetails() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-transparent" />
 
-        <div className="relative h-full mx-auto max-w-[1600px] px-6 lg:px-10 pt-28 pb-16 flex flex-col md:flex-row gap-10 items-end md:items-center">
+        <div className="relative h-full w-full px-4 lg:px-16 pt-24 pb-10 flex flex-col md:flex-row gap-10 items-end md:items-center">
           {/* Poster */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -162,10 +165,18 @@ function MovieDetails() {
               ))}
             </div>
 
-            {/* Title */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-none text-white">
-              {title}
-            </h1>
+            {/* Title or logo */}
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={title}
+                className="h-12 md:h-16 lg:h-20 w-auto object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]"
+              />
+            ) : (
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-none text-white">
+                {title}
+              </h1>
+            )}
 
             {/* Meta line */}
             <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-white/60">
