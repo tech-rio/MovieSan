@@ -175,12 +175,17 @@ def _format_links(db_links, title: str) -> list[DownloadLink]:
     result = []
     for link in db_links:
         link_id = hashlib.md5(link.url.encode()).hexdigest()[:12]
+        
+        provider = "VegaMovies"
+        if "nexdrive" in link.url.lower() or "rogmovies" in link.url.lower():
+            provider = "RogMovies"
+
         result.append(
             DownloadLink(
                 id=link_id,
                 quality=link.quality or "Unknown",
                 size=link.size or "—",
-                provider="VegaMovies",
+                provider=provider,
                 url=link.url,
                 hdr="hdr" in (link.quality or "").lower()
                 or "2160" in (link.quality or ""),
