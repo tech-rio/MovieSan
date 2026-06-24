@@ -189,8 +189,45 @@ async def get_downloads_endpoint(
             log.info("Linked TMDB ID %d to movies: %s", tmdb_id, movie_ids)
 
     if not movies:
-        log.info("No match found in database for '%s' (%s)", title, year)
-        return []
+        log.info("No match found in database for '%s' (%s). Triggering ON-DEMAND SCRAPE...", title, year)
+        import asyncio
+        import sys
+        import os
+        
+        api_dir = os.path.dirname(__file__)
+        try:
+            p1 = await asyncio.create_subprocess_exec(
+                sys.executable, "-m", "scrapy", "crawl", "vegamovies", "-a", f"search={title}",
+                cwd=api_dir,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            p2 = await asyncio.create_subprocess_exec(
+                sys.executable, "-m", "scrapy", "crawl", "rogmovies", "-a", f"search={title}",
+                cwd=api_dir,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await asyncio.gather(p1.wait(), p2.wait())
+        except Exception as e:
+            log.error("On-demand scrape failed: %s", e)
+            
+        # Re-search after scrape
+        from database import search_movies
+        search_movies.cache_clear()
+        
+        movies = search_movies(title, year, media)
+        if not movies:
+            movies = search_movies(title, "", media)
+            
+        if movies:
+            log.info("On-demand scrape successful! Found %d new entries.", len(movies))
+            movie_ids = [m.id for m in movies]
+            link_tmdb_id_to_movies(tmdb_id, movie_ids)
+            log.info("Linked TMDB ID %d to new movies: %s", tmdb_id, movie_ids)
+        else:
+            log.info("On-demand scrape found no results for '%s' (%s)", title, year)
+            return []
 
     log.info("Matched to %d entries for '%s' (%s)", len(movies), title, year)
 

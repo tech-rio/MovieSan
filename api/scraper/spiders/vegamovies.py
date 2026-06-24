@@ -48,11 +48,18 @@ class VegaMoviesSpider(CrawlSpider):
     }
     handle_httpstatus_list = [403, 500, 502, 503, 504]
 
-    def __init__(self, max_pages=0, db_path=None, *args, **kwargs):
+    def __init__(self, max_pages=0, db_path=None, search=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_items = int(max_pages)  # Reusing max_pages as max_items for testing
         self.items_scraped = 0
         self.db_path = db_path
+        
+        if search:
+            self.start_urls = [f"https://vegamovies.mq/?s={search.replace(' ', '+')}"]
+            self.rules = (
+                Rule(LinkExtractor(allow=r'/download-'), callback='parse_detail', follow=False),
+            )
+            self._compile_rules()
 
 
     # ── Detail page parser ───────────────────────────────────────
