@@ -6,21 +6,29 @@ import { tmdbApi, backdropUrl } from "@/services/tmdb";
 import { getSources } from "@/services/streaming";
 import { updateProgress } from "@/services/history";
 
+import { z } from "zod";
+
+const search = z.object({
+  media: z.enum(["movie", "tv"]).default("movie"),
+});
+
 export const Route = createFileRoute("/watch/$id")({
-  head: () => ({ meta: [{ title: "Watch — MoviesAlert" }] }),
+  validateSearch: search,
+  head: () => ({ meta: [{ title: "Watch — MovieSan" }] }),
   component: WatchPage,
 });
 
 function WatchPage() {
   const { id } = Route.useParams();
+  const { media } = Route.useSearch();
   const tmdbId = Number(id);
   const [theater, setTheater] = useState(false);
   const [activeSource, setActiveSource] = useState<string | null>(null);
   const [subtitle, setSubtitle] = useState("English");
 
   const details = useQuery({
-    queryKey: ["details", tmdbId, "movie"],
-    queryFn: () => tmdbApi.details({ data: { id: tmdbId, mediaType: "movie" } }),
+    queryKey: ["details", tmdbId, media],
+    queryFn: () => tmdbApi.details({ data: { id: tmdbId, mediaType: media } }),
   });
 
   const sources = useQuery({
@@ -58,6 +66,8 @@ function WatchPage() {
         <Link
           to="/movie/$id"
           params={{ id }}
+          search={{ media }}
+          onClick={(e) => { e.preventDefault(); window.history.back(); }}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
         >
           <ArrowLeft className="size-4" /> Back to details

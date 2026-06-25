@@ -1,5 +1,5 @@
 """
-MoviesAlert — Scraper API Backend (Scrapy + SQLite)
+MovieSan — Scraper API Backend (Scrapy + SQLite)
 
 Pre-crawls VegaMovies and stores movies + download links in SQLite.
 The FastAPI server matches TMDB IDs to scraped movies via fuzzy title search
@@ -42,7 +42,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(message)s",
 )
-log = logging.getLogger("moviesalert-api")
+log = logging.getLogger("MovieSan-api")
 
 
 # ── Response models ──────────────────────────────────────────────────
@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
-    title="MoviesAlert Downloads API",
+    title="MovieSan Downloads API",
     description="Scrapy-powered backend that serves VegaMovies download links matched by TMDB ID.",
     version="2.0.0",
     lifespan=lifespan,
@@ -99,7 +99,7 @@ async def root():
     stats = get_stats()
     return {
         "status": "ok",
-        "service": "MoviesAlert Downloads API v2 (Scrapy + SQLite)",
+        "service": "MovieSan Downloads API v2 (Scrapy + SQLite)",
         "database": stats,
     }
 
@@ -206,9 +206,11 @@ async def get_downloads_endpoint(
             log.error("On-demand scrape failed: %s", e)
             
         # Re-search after scrape
-        from database import search_movies
         search_movies.cache_clear()
-        
+        # Also clear download links cache so we don't serve stale empty links
+        import database
+        database.get_download_links.cache_clear()
+
         movies = search_movies(title, year, media)
         if not movies:
             movies = search_movies(title, "", media)

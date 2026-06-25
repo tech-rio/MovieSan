@@ -40,7 +40,7 @@ export function Header() {
         <div className="flex items-center gap-10">
           <Link to="/" className="flex items-center gap-2">
             <span className="text-lg font-bold tracking-tight">
-              MOVIES<span className="text-primary">ALERT</span>
+              MOVIE<span className="text-primary">SAN</span>
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">

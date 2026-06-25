@@ -64,10 +64,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MoviesAlert — Stream the universe" },
-      { name: "description", content: "MoviesAlert is a premium streaming service for movies, TV shows and anime." },
+      { title: "MovieSan — Stream the universe" },
+      { name: "description", content: "MovieSan is a premium streaming service for movies, TV shows and anime." },
       { name: "theme-color", content: "#0a0814" },
-      { property: "og:title", content: "MoviesAlert" },
+      { property: "og:title", content: "MovieSan" },
       { property: "og:description", content: "Stream the universe." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

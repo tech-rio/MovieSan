@@ -5,7 +5,7 @@ import { getWatchlist, removeFromWatchlist } from "@/services/watchlist";
 import { posterUrl } from "@/services/tmdb";
 
 export const Route = createFileRoute("/watchlist")({
-  head: () => ({ meta: [{ title: "My Watchlist — MoviesAlert" }] }),
+  head: () => ({ meta: [{ title: "My Watchlist — MovieSan" }] }),
   component: WatchlistPage,
 });
 

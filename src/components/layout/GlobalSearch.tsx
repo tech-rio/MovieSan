@@ -145,8 +145,9 @@ export function GlobalSearch() {
                     return (
                       <Link
                         key={`${mediaType}-${item.id}`}
-                        to={`/${mediaType}/$id`}
+                        to={`/movie/$id`}
                         params={{ id: item.id.toString() }}
+                        search={{ media: mediaType }}
                         className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 transition-colors"
                       >
                         {poster ? (

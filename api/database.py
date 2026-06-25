@@ -74,19 +74,22 @@ def search_movies(title: str, year: str = "", media: str = "") -> list[MovieRow]
         norm = normalize_title(title)
 
         # Strategy 1: FTS5 match
-        movies = _fts_search(conn, norm, year)
+        movies = _fts_search(conn, norm)
+        movies = _apply_filters(movies, year, media)
         if movies:
-            return _filter_by_media(movies, media)
+            return movies
 
         # Strategy 2: LIKE search
-        movies = _like_search(conn, norm, year)
+        movies = _like_search(conn, norm)
+        movies = _apply_filters(movies, year, media)
         if movies:
-            return _filter_by_media(movies, media)
+            return movies
 
         # Strategy 3: Word-overlap search
-        movies = _word_overlap_search(conn, norm, year)
+        movies = _word_overlap_search(conn, norm)
+        movies = _apply_filters(movies, year, media)
         if movies:
-            return _filter_by_media(movies, media)
+            return movies
 
         return []
     finally:
@@ -111,16 +114,56 @@ def _filter_by_media(movies: list[MovieRow], media: str) -> list[MovieRow]:
         
     scored.sort(key=lambda x: x[0], reverse=True)
     
-    # If the best match is penalized (meaning we searched for TV but only found movies),
-    # drop the false positive so we don't return movies for TV series.
-    best_score = scored[0][0]
-    if best_score < 0:
-        return []
+    # We previously dropped results with negative scores, but this incorrectly 
+    # removed valid fuzzy matches when the media type heuristically mismatched.
+    # Now we just return the sorted list so better media matches are prioritized 
+    # but mismatched media are not completely dropped.
+    return [m for score, m in scored]
+
+
+def _apply_filters(movies: list[MovieRow], year: str, media: str) -> list[MovieRow]:
+    if not movies:
+        return movies
         
-    return [m for score, m in scored if score >= 0]
+    movies = _filter_by_media(movies, media)
+    
+    if not movies or not year:
+        return movies
+        
+    try:
+        target_year = int(year)
+    except:
+        return movies
+        
+    # Score by year proximity
+    scored = []
+    for m in movies:
+        try:
+            db_year = int(m.year)
+            diff = abs(db_year - target_year)
+            if diff <= 2:
+                # Prioritize closer years
+                scored.append((diff, m))
+            else:
+                # Allow larger differences for series, because TMDB sends first_air_date
+                is_tv = bool(m.season) or any(x in m.title.lower() for x in ["season", "episode", "series", "complete", "vol"])
+                if is_tv:
+                    scored.append((diff, m))
+        except:
+            # If DB doesn't have a valid year, put it at the end
+            scored.append((999, m))
+            
+    scored.sort(key=lambda x: x[0])
+    
+    if not scored:
+        # If nothing passed the filter, just return the unfiltered list 
+        # (better to show something than nothing if title matched strongly)
+        return movies
+        
+    return [m for diff, m in scored]
 
 
-def _fts_search(conn: sqlite3.Connection, norm_title: str, year: str) -> list[MovieRow]:
+def _fts_search(conn: sqlite3.Connection, norm_title: str) -> list[MovieRow]:
     """Search using FTS5 full-text index."""
     try:
         # Build FTS query: each word as a prefix match
@@ -130,32 +173,17 @@ def _fts_search(conn: sqlite3.Connection, norm_title: str, year: str) -> list[Mo
 
         fts_query = " ".join(f'"{w}"*' for w in words[:5])  # limit to 5 words
 
-        if year:
-            rows = conn.execute(
-                """
-                SELECT m.id, m.title, m.year, m.season, m.page_url, m.poster_url, m.categories, m.tmdb_id,
-                       rank
-                FROM movies_fts fts
-                JOIN movies m ON m.id = fts.rowid
-                WHERE movies_fts MATCH ? AND m.year = ?
-                ORDER BY rank
-                LIMIT 20
-                """,
-                (fts_query, year),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                """
-                SELECT m.id, m.title, m.year, m.season, m.page_url, m.poster_url, m.categories, m.tmdb_id,
-                       rank
-                FROM movies_fts fts
-                JOIN movies m ON m.id = fts.rowid
-                WHERE movies_fts MATCH ?
-                ORDER BY rank
-                LIMIT 20
-                """,
-                (fts_query,),
-            ).fetchall()
+        rows = conn.execute(
+            """
+            SELECT m.id, m.title, m.year, m.season, m.page_url, m.poster_url, m.categories, m.tmdb_id,
+                   rank
+            FROM movies_fts fts
+            JOIN movies m ON m.id = fts.rowid
+            WHERE movies_fts MATCH ?
+            ORDER BY rank LIMIT 10
+            """,
+            (fts_query,)
+        ).fetchall()
 
         if rows:
             return [
@@ -177,30 +205,19 @@ def _fts_search(conn: sqlite3.Connection, norm_title: str, year: str) -> list[Mo
     return []
 
 
-def _like_search(conn: sqlite3.Connection, norm_title: str, year: str) -> list[MovieRow]:
+def _like_search(conn: sqlite3.Connection, norm_title: str) -> list[MovieRow]:
     """Fallback: search using LIKE on normalized title."""
     pattern = f"%{norm_title}%"
 
-    if year:
-        rows = conn.execute(
-            """
-            SELECT id, title, year, season, page_url, poster_url, categories, tmdb_id
-            FROM movies
-            WHERE title_normalized LIKE ? AND year = ?
-            LIMIT 20
-            """,
-            (pattern, year),
-        ).fetchall()
-    else:
-        rows = conn.execute(
-            """
-            SELECT id, title, year, season, page_url, poster_url, categories, tmdb_id
-            FROM movies
-            WHERE title_normalized LIKE ?
-            LIMIT 20
-            """,
-            (pattern,),
-        ).fetchall()
+    rows = conn.execute(
+        """
+        SELECT id, title, year, season, page_url, poster_url, categories, tmdb_id
+        FROM movies
+        WHERE title_normalized LIKE ?
+        LIMIT 20
+        """,
+        (pattern,),
+    ).fetchall()
 
     if rows:
         return [
@@ -221,7 +238,7 @@ def _like_search(conn: sqlite3.Connection, norm_title: str, year: str) -> list[M
 
 
 def _word_overlap_search(
-    conn: sqlite3.Connection, norm_title: str, year: str
+    conn: sqlite3.Connection, norm_title: str
 ) -> list[MovieRow]:
     """
     Last resort: fetch candidates and score by word overlap.
@@ -240,26 +257,15 @@ def _word_overlap_search(
     search_word = max(significant_words, key=len)
     pattern = f"%{search_word}%"
 
-    if year:
-        rows = conn.execute(
-            """
-            SELECT id, title, title_normalized, year, season, page_url, poster_url, categories, tmdb_id
-            FROM movies
-            WHERE title_normalized LIKE ? AND year = ?
-            LIMIT 50
-            """,
-            (pattern, year),
-        ).fetchall()
-    else:
-        rows = conn.execute(
-            """
-            SELECT id, title, title_normalized, year, season, page_url, poster_url, categories, tmdb_id
-            FROM movies
-            WHERE title_normalized LIKE ?
-            LIMIT 50
-            """,
-            (pattern,),
-        ).fetchall()
+    rows = conn.execute(
+        """
+        SELECT id, title, title_normalized, year, season, page_url, poster_url, categories, tmdb_id
+        FROM movies
+        WHERE title_normalized LIKE ?
+        LIMIT 50
+        """,
+        (pattern,),
+    ).fetchall()
 
     if not rows:
         return []
@@ -274,10 +280,12 @@ def _word_overlap_search(
 
         overlap = len(target_words & candidate_words)
         union = len(target_words | candidate_words)
-        score = overlap / union if union > 0 else 0
+        # Score is primarily based on jaccard similarity, but with a slight bonus for sheer overlap count
+        score = (overlap / union if union > 0 else 0) + (overlap * 0.05)
 
-        # Require at least 40% word overlap
-        if score >= 0.4:
+        # As long as there is at least one overlapping word (and we already filtered by the longest significant word in SQL),
+        # we consider it a match.
+        if overlap >= 1:
             best_rows.append((score, r))
             
     # Sort by score descending
@@ -292,7 +300,7 @@ def _word_overlap_search(
             page_url=row["page_url"],
             poster_url=row["poster_url"],
             categories=json.loads(row["categories"] or "[]"),
-            tmdb_id=row.get("tmdb_id"),
+            tmdb_id=row["tmdb_id"],
         )
         for _, row in best_rows
     ]

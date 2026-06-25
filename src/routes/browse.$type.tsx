@@ -6,7 +6,7 @@ import { MovieCard } from "@/components/cards/MovieCard";
 
 export const Route = createFileRoute("/browse/$type")({
   head: ({ params }) => ({
-    meta: [{ title: `${params.type === "tv" ? "TV Shows" : "Movies"} — MoviesAlert` }],
+    meta: [{ title: `${params.type === "tv" ? "TV Shows" : "Movies"} — MovieSan` }],
   }),
   component: BrowsePage,
 });

@@ -11,7 +11,7 @@ import { getHistory } from "@/services/history";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MoviesAlert — Stream the universe" },
+      { title: "MovieSan — Stream the universe" },
       { name: "description", content: "Trending movies, TV shows, anime and more in cinematic 4K." },
     ],
   }),

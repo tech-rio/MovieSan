@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
-    meta: [{ title: "About Us — MOVIESALERT" }],
+    meta: [{ title: "About Us — MovieSan" }],
   }),
   component: AboutPage,
 });
@@ -13,7 +13,7 @@ function AboutPage() {
       <h1 className="text-4xl font-bold tracking-tight mb-8">About Us</h1>
       <div className="prose prose-invert prose-lg max-w-none">
         <p className="text-muted-foreground">
-          Welcome to MOVIESALERT. Content for this page will be added soon.
+          Welcome to MovieSan. Content for this page will be added soon.
         </p>
       </div>
     </div>

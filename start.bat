@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo =======================================
-echo     MoviesAlert Startup Script
+echo     MovieSan Startup Script
 echo =======================================
 
 :: 1. Find the current Local IP Address
@@ -38,14 +38,14 @@ echo .env updated successfully.
 echo.
 echo [3/3] Starting Background Services...
 echo Starting Backend API (Port 8000)...
-start "MoviesAlert API" cmd /c "cd api && .\.venv\Scripts\uvicorn.exe main:app --host 0.0.0.0 --port 8000"
+start "MovieSan API" cmd /c "cd api && .\.venv\Scripts\uvicorn.exe main:app --host 0.0.0.0 --port 8000"
 
 echo Starting Huey Task Queue Worker...
-start "MoviesAlert Task Queue" cmd /c "cd api && .\.venv\Scripts\huey_consumer.exe tasks.huey"
+start "MovieSan Task Queue" cmd /c "cd api && .\.venv\Scripts\huey_consumer.exe tasks.huey"
 
 :: 4. Start the Frontend App
 echo Starting Frontend Web App (Port 8080)...
-start "MoviesAlert Frontend" cmd /c "npm run dev -- --host 0.0.0.0"
+start "MovieSan Frontend" cmd /c "npm run dev -- --host 0.0.0.0"
 
 echo.
 echo =======================================

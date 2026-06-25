@@ -3,7 +3,7 @@
 
 services:
   - type: web
-    name: moviesalert-api
+    name: MovieSan-api
     runtime: docker
     dockerfilePath: ./api/Dockerfile
     dockerContext: ./api

@@ -7,7 +7,7 @@ import type { WatchProgress } from "@/types/streaming";
  *   POST   /api/history/update
  *   DELETE /api/history/:id
  */
-const KEY = "moviesalert:history:v1";
+const KEY = "MovieSan:history:v1";
 
 function read(): WatchProgress[] {
   if (typeof window === "undefined") return [];

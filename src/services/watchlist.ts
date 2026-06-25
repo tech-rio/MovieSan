@@ -7,7 +7,7 @@ import type { WatchlistItem } from "@/types/streaming";
  *   POST   /api/watchlist
  *   DELETE /api/watchlist/:id
  */
-const KEY = "moviesalert:watchlist:v1";
+const KEY = "MovieSan:watchlist:v1";
 
 function read(): WatchlistItem[] {
   if (typeof window === "undefined") return [];

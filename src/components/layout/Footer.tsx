@@ -11,7 +11,7 @@ export function Footer() {
               MOVIES<span className="text-primary">ALERT</span>
             </Link>
             <div className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-              © {new Date().getFullYear()} MOVIESALERT. All rights reserved.
+              © {new Date().getFullYear()} MovieSan. All rights reserved.
             </div>
           </div>
 
@@ -26,7 +26,7 @@ export function Footer() {
 
         <div className="mt-5 pt-4 border-t border-border/40">
           <p className="text-[10px] text-muted-foreground/40 leading-relaxed text-center md:text-left max-w-5xl">
-            MOVIESALERT does not host any files, it merely pulls streams from 3rd party services. Legal issues should be taken up with the file hosts and providers. MOVIESALERT is not responsible for any media files shown by the video providers.
+            MovieSan does not host any files, it merely pulls streams from 3rd party services. Legal issues should be taken up with the file hosts and providers. MovieSan is not responsible for any media files shown by the video providers.
           </p>
         </div>
 

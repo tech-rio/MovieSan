@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
-    meta: [{ title: "Contact Us — MOVIESALERT" }],
+    meta: [{ title: "Contact Us — MovieSan" }],
   }),
   component: ContactPage,
 });

@@ -33,7 +33,6 @@ from scraper.title_parser import parse_quality_size, parse_title
 class VegaMoviesSpider(CrawlSpider):
     name = "vegamovies"
     allowed_domains = ["vegamovies.mq"]
-    start_urls = ["https://vegamovies.mq/"]
     
     rules = (
         # Detail pages
@@ -50,17 +49,28 @@ class VegaMoviesSpider(CrawlSpider):
 
     def __init__(self, max_pages=0, db_path=None, search=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.max_items = int(max_pages)  # Reusing max_pages as max_items for testing
+        self.max_items = int(max_pages)
         self.items_scraped = 0
         self.db_path = db_path
         
         if search:
-            self.start_urls = [f"https://vegamovies.mq/?s={search.replace(' ', '+')}"]
-            self.rules = (
-                Rule(LinkExtractor(allow=r'/download-'), callback='parse_detail', follow=False),
-            )
-            self._compile_rules()
+            self.search = search.replace(" ", "+")
+            self.start_urls = [f"https://vegamovies.mq/search.php?q={self.search}&page=1"]
+        else:
+            # Fallback for broad scheduled crawls
+            self.start_urls = ["https://vegamovies.mq/"]
 
+    def parse_start_url(self, response, **kwargs):
+        self.logger.info("parse_start_url called with %s", response.url)
+        try:
+            data = response.json()
+            for hit in data.get("hits", []):
+                permalink = hit.get("document", {}).get("permalink")
+                if permalink:
+                    url = response.urljoin(permalink)
+                    yield scrapy.Request(url, callback=self.parse_detail)
+        except Exception as e:
+            self.logger.error(f"Failed to parse search JSON: {e}")
 
     # ── Detail page parser ───────────────────────────────────────
 
@@ -145,31 +155,31 @@ class VegaMoviesSpider(CrawlSpider):
         if not page_body:
             page_body = response
 
-        all_h5s = page_body.css("h5")
+        all_headings = page_body.css("h3, h4, h5")
 
-        for h5 in all_h5s:
-            heading_text = h5.css("::text").getall()
+        for heading in all_headings:
+            heading_text = heading.css("::text").getall()
             heading_text = " ".join(heading_text).strip()
 
             if not heading_text:
                 continue
 
-            # First, check if there's an <a> inside the h5 itself
-            download_url = h5.css("a::attr(href)").get("")
+            # First, check if there's an <a> inside the heading itself
+            download_url = heading.css("a::attr(href)").get("")
             if download_url:
                 quality, size = parse_quality_size(heading_text)
                 links.append({"provider": "VegaMovies", "quality": quality, "size": size, "url": download_url})
                 continue
 
-            # Find all a tags with .dwd-button in following siblings (up to 3 paragraphs)
-            button_links = h5.xpath(
-                "following-sibling::p[position()<=3]//a[.//button[contains(@class,'dwd-button')]]"
+            # Find all a tags in following siblings (up to 3 paragraphs or divs)
+            button_links = heading.xpath(
+                "following-sibling::*[self::p or self::div][position()<=3]//a[.//button]"
             )
             
             if not button_links:
-                # Some posts don't use .dwd-button class, just direct a href
-                button_links = h5.xpath(
-                    "following-sibling::p[position()<=3]//a"
+                # Some posts don't use button class, just direct a href
+                button_links = heading.xpath(
+                    "following-sibling::*[self::p or self::div][position()<=3]//a"
                 )
 
             for a_tag in button_links:
@@ -177,17 +187,13 @@ class VegaMoviesSpider(CrawlSpider):
                 if not url or url.startswith('#'):
                     continue
 
-                # Filter out garbage links if it doesn't have a button class
-                if not a_tag.xpath(".//button[contains(@class,'dwd-button')]"):
-                    if not any(x in url for x in ("nexdrive", "drive", "mega", "vcloud", "fastserver", "clicknupload")):
-                        continue
-
                 # Extract button text to distinguish Zip, Episode 1, etc.
-                btn_text = a_tag.xpath(".//text()").getall()
-                btn_text = " ".join(btn_text).strip()
+                btn_text = a_tag.xpath("string(.)").get("").strip()
                 
                 # Exclude generic words
                 if btn_text.lower() in ("download now", "download", "click here", "link"):
+                    btn_text = ""
+                elif "direct-download" in btn_text.lower():
                     btn_text = ""
 
                 quality, size = parse_quality_size(heading_text)
@@ -203,16 +209,15 @@ class VegaMoviesSpider(CrawlSpider):
                         "url": url,
                     })
 
-        # Strategy 2: If Strategy 1 found nothing, try all dwd-button links directly
+        # Strategy 2: If Strategy 1 found nothing, try all button links directly
         if not links:
-            for btn_link in page_body.css("a:has(button.dwd-button)"):
+            for btn_link in page_body.css("a:has(button)"):
                 url = btn_link.attrib.get("href", "")
                 if not url:
                     continue
 
-                btn_text = btn_link.xpath(".//text()").getall()
-                btn_text = " ".join(btn_text).strip()
-                if btn_text.lower() in ("download now", "download"):
+                btn_text = btn_link.xpath("string(.)").get("").strip()
+                if btn_text.lower() in ("download now", "download", "direct-download"):
                     btn_text = ""
 
                 preceding_h5 = btn_link.xpath(

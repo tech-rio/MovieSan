@@ -9,7 +9,7 @@ import { backdropUrl, posterUrl, tmdbApi, TMDB_IMG } from "@/services/tmdb";
 function HeroTitle({ movie }: { movie: TmdbMovie }) {
   const mediaType = movie.media_type === "tv" || movie.first_air_date ? "tv" : "movie";
   
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["tmdb", "details", mediaType, movie.id],
     queryFn: () => tmdbApi.details({ data: { id: movie.id, mediaType } }),
     staleTime: 5 * 60_000,
@@ -18,12 +18,16 @@ function HeroTitle({ movie }: { movie: TmdbMovie }) {
   const logo = data?.images?.logos?.find((l) => l.iso_639_1 === "en");
   const title = movie.title || movie.name || "";
 
+  if (isLoading || !data) {
+    return <div className="mt-6 h-20 md:h-28 lg:h-36" />;
+  }
+
   if (logo) {
     return (
       <div className="mt-6 h-20 md:h-28 lg:h-36 flex items-end justify-start">
         <img 
           src={`${TMDB_IMG}/w500${logo.file_path}`} 
-          alt={title} 
+          alt="" 
           className="max-h-full max-w-[80%] object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.8)] origin-bottom-left"
         />
       </div>
@@ -66,7 +70,7 @@ export function HeroCarousel({ items }: Props) {
           {s.backdrop_path && (
             <img
               src={backdropUrl(s.backdrop_path, "original") ?? ""}
-              alt={s.title || s.name}
+              alt=""
               className="w-full h-full object-cover"
               loading={i === 0 ? "eager" : "lazy"}
             />

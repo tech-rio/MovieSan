@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>()(
           user: {
             id: "demo-user",
             name: "Astra Voss",
-            email: "astra@moviesalert.io",
+            email: "astra@MovieSan.io",
             avatarUrl: "https://i.pravatar.cc/120?img=47",
           },
           accessToken: "mock.access.token",
@@ -36,6 +36,6 @@ export const useAuthStore = create<AuthState>()(
         }),
       signOut: () => set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
     }),
-    { name: "moviesalert:auth" },
+    { name: "MovieSan:auth" },
   ),
 );

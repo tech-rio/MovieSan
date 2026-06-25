@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, Clock, Download, Play, Plus, Star,
   Trophy, Eye, Heart, ChevronRight, ChevronLeft,
-  Check, Flame, Youtube, Volume2, VolumeX, X
+  Check, Flame, Youtube, Volume2, VolumeX, X, ArrowLeft
 } from "lucide-react";
 import { useState, useRef } from "react";
 import type React from "react";
@@ -24,7 +24,7 @@ const search = z.object({
 export const Route = createFileRoute("/movie/$id")({
   validateSearch: search,
   head: () => ({
-    meta: [{ title: "Details — MoviesAlert" }],
+    meta: [{ title: "Details — MovieSan" }],
   }),
   component: MovieDetails,
 });
@@ -35,6 +35,7 @@ type Tab = (typeof TABS)[number];
 function MovieDetails() {
   const { id } = Route.useParams();
   const { media } = Route.useSearch();
+  const router = useRouter();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const castRef = useRef<HTMLDivElement>(null);
@@ -128,6 +129,18 @@ function MovieDetails() {
           />
         )}
         
+        {/* Floating Left Actions (Back Button) */}
+        <div className="absolute top-24 left-6 lg:left-10 z-50">
+          <button 
+            onClick={() => router.history.back()} 
+            className="h-12 px-5 rounded-full glass-strong hover:bg-white/20 transition flex items-center justify-center text-white gap-2 backdrop-blur-md"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="size-5" />
+            <span className="font-medium hidden md:inline">Back</span>
+          </button>
+        </div>
+
         {/* Floating Right Actions */}
         {trailerId && (
           <div className="absolute top-24 right-6 lg:right-10 flex flex-col gap-3 z-50">
@@ -212,13 +225,13 @@ function MovieDetails() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link to="/watch/$id" params={{ id }} className="flex items-center gap-3 px-8 py-3.5 rounded-2xl bg-gradient-primary text-white font-bold shadow-glow hover:scale-[1.03] transition-all ring-glow">
-                <Play className="size-5 fill-white" /> Play Movie
+              <Link to="/watch/$id" params={{ id }} search={{ media }} className="flex items-center gap-3 px-8 py-3.5 rounded-2xl bg-gradient-primary text-white font-bold shadow-glow hover:scale-[1.03] transition-all ring-glow">
+                <Play className="size-5 fill-white" /> Play {media === "tv" ? "Show" : "Movie"}
               </Link>
               <button onClick={() => toggleWatchlist.mutate()} className="flex items-center gap-3 px-6 py-3.5 rounded-2xl glass-strong font-semibold hover:bg-white/10 hover:border-white/30 hover:scale-[1.03] transition-all text-white">
                 {watchlist.data ? <Check className="size-5 text-primary-glow" /> : <Plus className="size-5" />} My List
               </button>
-              <Link to="/download/$id" params={{ id }} className="flex items-center gap-3 px-6 py-3.5 rounded-2xl glass-strong font-semibold hover:bg-white/10 hover:border-white/30 hover:scale-[1.03] transition-all text-white">
+              <Link to="/download/$id" params={{ id }} search={{ media }} className="flex items-center gap-3 px-6 py-3.5 rounded-2xl glass-strong font-semibold hover:bg-white/10 hover:border-white/30 hover:scale-[1.03] transition-all text-white">
                 <Download className="size-5" /> Download
               </Link>
             </div>
@@ -426,6 +439,7 @@ function DownloadsTab({ tmdbId, media, title, year, id }: { tmdbId: number; medi
           <Link
             to="/download/$id"
             params={{ id }}
+            search={{ media }}
             className="text-sm text-primary-glow hover:underline"
           >
             View all →
