@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, Clock, Download, Play, Plus, Star,
   Trophy, Eye, Heart, ChevronRight, ChevronLeft,
-  Check, Flame
+  Check, Flame, Youtube, Volume2, VolumeX, X
 } from "lucide-react";
 import { useState, useRef } from "react";
 import type React from "react";
@@ -38,6 +38,9 @@ function MovieDetails() {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const castRef = useRef<HTMLDivElement>(null);
+  
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   const tmdbId = Number(id);
   const { data, isLoading } = useQuery({
@@ -93,8 +96,9 @@ function MovieDetails() {
   const voteCount = data.vote_count ? `${(data.vote_count / 1000).toFixed(1)}K` : "—";
   const releaseDate = data.release_date ? new Date(data.release_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
-  const logo = data.images?.logos && data.images.logos[0];
+  const logo = data.images?.logos?.find((l: any) => l.iso_639_1 === "en");
   const logoUrl = logo ? `https://image.tmdb.org/t/p/w500${logo.file_path}` : null;
+  const trailerId = data.videos?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key;
 
   const scrollCast = (dir: "left" | "right") => {
     if (castRef.current) {
@@ -106,12 +110,42 @@ function MovieDetails() {
     <div className="pb-20 min-h-screen">
       {/* HERO */}
       <section className="relative min-h-screen overflow-hidden">
-        {data.backdrop_path && (
+        {showTrailer && trailerId ? (
+          <div className="absolute inset-0 w-full h-full bg-black">
+            <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=${trailerId}`}
+                allow="autoplay; encrypted-media"
+                className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2 opacity-80"
+              />
+            </div>
+          </div>
+        ) : data.backdrop_path && (
           <img
             src={backdropUrl(data.backdrop_path, "original") ?? ""}
             alt={title}
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
+        )}
+        
+        {/* Floating Right Actions */}
+        {trailerId && (
+          <div className="absolute top-24 right-6 lg:right-10 flex flex-col gap-3 z-50">
+            {showTrailer ? (
+              <>
+                <button onClick={() => setIsMuted(!isMuted)} className="size-12 rounded-full glass-strong hover:bg-white/20 transition flex items-center justify-center text-white" aria-label="Toggle mute">
+                  {isMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+                </button>
+                <button onClick={() => setShowTrailer(false)} className="size-12 rounded-full glass-strong hover:bg-red-500/80 transition flex items-center justify-center text-white" aria-label="Close trailer">
+                  <X className="size-5" />
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setShowTrailer(true)} className="size-12 rounded-full glass-strong hover:bg-white/20 transition flex items-center justify-center text-white shadow-glow" aria-label="Play Trailer">
+                <Youtube className="size-5" />
+              </button>
+            )}
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />

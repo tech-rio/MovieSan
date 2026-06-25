@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Bell, Bookmark, Search as SearchIcon } from "lucide-react";
+import { Bell, Bookmark } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect, useState } from "react";
+import { GlobalSearch } from "./GlobalSearch";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -28,11 +29,14 @@ export function Header() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled ? "header-glass" : "bg-transparent"
-      }`}
+      className="fixed top-0 inset-x-0 z-50"
     >
-      <div className="w-full flex items-center justify-between gap-6 px-6 lg:px-10 h-16">
+      <div 
+        className={`absolute inset-0 pointer-events-none transition-all duration-300 -z-10 ${
+          scrolled ? "header-glass" : "bg-transparent"
+        }`}
+      />
+      <div className="relative z-10 w-full flex items-center justify-between gap-6 px-6 lg:px-10 h-16">
         <div className="flex items-center gap-10">
           <Link to="/" className="flex items-center gap-2">
             <span className="text-lg font-bold tracking-tight">
@@ -64,14 +68,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            to="/search"
-            className="glass flex items-center gap-2 px-3 py-2 rounded-full text-sm text-muted-foreground hover:text-foreground transition w-56 lg:w-72"
-          >
-            <SearchIcon className="size-4" />
-            <span className="truncate">Search movies, shows…</span>
-            <kbd className="ml-auto text-xs px-1.5 py-0.5 rounded bg-secondary/70 hidden lg:inline">⌘K</kbd>
-          </Link>
+          <GlobalSearch />
           <button className="size-10 grid place-items-center rounded-full glass hover:bg-secondary transition">
             <Bell className="size-4" />
           </button>

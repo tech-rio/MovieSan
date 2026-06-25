@@ -130,6 +130,8 @@ class SQLitePipeline:
                 quality TEXT DEFAULT '',
                 size TEXT DEFAULT '',
                 url TEXT NOT NULL,
+                is_dead INTEGER DEFAULT 0,
+                last_checked_at TEXT DEFAULT NULL,
                 UNIQUE(movie_id, url)
             )
         """)
@@ -139,6 +141,17 @@ class SQLitePipeline:
             cur.execute("ALTER TABLE download_links ADD COLUMN provider TEXT DEFAULT 'Unknown'")
         except sqlite3.OperationalError:
             pass  # Column already exists
+
+        # Migration: add dead-link tracking columns
+        try:
+            cur.execute("ALTER TABLE download_links ADD COLUMN is_dead INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+            
+        try:
+            cur.execute("ALTER TABLE download_links ADD COLUMN last_checked_at TEXT DEFAULT NULL")
+        except sqlite3.OperationalError:
+            pass
 
         # FTS5 virtual table for fuzzy title search
         cur.execute("""

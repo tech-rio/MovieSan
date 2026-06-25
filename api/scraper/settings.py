@@ -20,13 +20,13 @@ ROBOTSTXT_OBEY = False
 
 # Be polite: limit concurrent requests and add delay
 CONCURRENT_REQUESTS = 32
-DOWNLOAD_DELAY = 0.25  # seconds between requests to same domain
+DOWNLOAD_DELAY = 1.0  # seconds between requests to same domain
 
 # Auto-throttle: dynamically adjusts delay based on server response time
 AUTOTHROTTLE_ENABLED = True
 AUTOTHROTTLE_START_DELAY = 0.5
 AUTOTHROTTLE_MAX_DELAY = 5.0
-AUTOTHROTTLE_TARGET_CONCURRENCY = 16.0
+AUTOTHROTTLE_TARGET_CONCURRENCY = 8.0
 AUTOTHROTTLE_DEBUG = False
 
 # ---------- Retries ----------
@@ -45,6 +45,7 @@ DOWNLOADER_MIDDLEWARES = {
     # Disable default UA middleware, use ours
     "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
     "scraper.middlewares.RandomUserAgentMiddleware": 400,
+    "scraper.middlewares.ProxyRotationMiddleware": 410,
 }
 
 # ---------- Pipeline ----------

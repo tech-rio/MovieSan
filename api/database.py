@@ -345,7 +345,7 @@ def get_download_links(movie_id: int) -> list[DownloadLinkRow]:
     conn = _connect()
     try:
         rows = conn.execute(
-            "SELECT id, provider, quality, size, url FROM download_links WHERE movie_id = ?",
+            "SELECT id, provider, quality, size, url FROM download_links WHERE movie_id = ? AND is_dead = 0",
             (movie_id,),
         ).fetchall()
 

@@ -3,6 +3,10 @@ Custom Scrapy middlewares for anti-bot evasion.
 """
 
 import random
+import os
+import logging
+
+log = logging.getLogger(__name__)
 
 
 # Real browser user agents for rotation
@@ -26,4 +30,24 @@ class RandomUserAgentMiddleware:
 
     def process_request(self, request, spider):
         request.headers["User-Agent"] = random.choice(USER_AGENTS)
+        return None
+
+class ProxyRotationMiddleware:
+    """
+    Scrapy downloader middleware that sets a proxy if PROXIES is configured
+    in the environment variables.
+    """
+
+    def __init__(self):
+        proxies_env = os.environ.get("PROXIES", "")
+        self.proxies = [p.strip() for p in proxies_env.split(",") if p.strip()]
+        if self.proxies:
+            log.info(f"Loaded {len(self.proxies)} proxies for rotation.")
+        else:
+            log.info("No proxies configured. Using direct connection.")
+
+    def process_request(self, request, spider):
+        if self.proxies:
+            proxy = random.choice(self.proxies)
+            request.meta["proxy"] = proxy
         return None

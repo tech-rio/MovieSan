@@ -11,12 +11,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-
 log = logging.getLogger(__name__)
-
-_scheduler: BackgroundScheduler | None = None
 
 
 def run_spider(max_pages: int = 0):
@@ -77,36 +72,3 @@ def run_spider(max_pages: int = 0):
     elapsed = (datetime.now(timezone.utc) - start).total_seconds()
     log.info("Total crawl time: %.1fs", elapsed)
 
-
-def start_scheduler(interval_hours: int = 24, max_pages: int = 0):
-    """
-    Start the background scheduler that runs the spider every `interval_hours`.
-    """
-    global _scheduler
-
-    if _scheduler is not None:
-        log.warning("Scheduler already running.")
-        return
-
-    _scheduler = BackgroundScheduler(daemon=True)
-
-    _scheduler.add_job(
-        run_spider,
-        trigger=IntervalTrigger(hours=interval_hours),
-        kwargs={"max_pages": max_pages},
-        id="multi_spider_crawl",
-        name=f"Multi-Spider Crawl (every {interval_hours}h)",
-        replace_existing=True,
-    )
-
-    _scheduler.start()
-    log.info("Scheduler started: spider will run every %d hours.", interval_hours)
-
-
-def stop_scheduler():
-    """Stop the background scheduler."""
-    global _scheduler
-    if _scheduler:
-        _scheduler.shutdown(wait=False)
-        _scheduler = None
-        log.info("Scheduler stopped.")

@@ -15,7 +15,7 @@ function HeroTitle({ movie }: { movie: TmdbMovie }) {
     staleTime: 5 * 60_000,
   });
 
-  const logo = data?.images?.logos?.find((l) => l.iso_639_1 === "en") || data?.images?.logos?.[0];
+  const logo = data?.images?.logos?.find((l) => l.iso_639_1 === "en");
   const title = movie.title || movie.name || "";
 
   if (logo) {

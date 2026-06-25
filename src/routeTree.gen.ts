@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WatchlistRouteImport } from './routes/watchlist'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SearchRouteImport } from './routes/search'
 import { Route as DmcaRouteImport } from './routes/dmca'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
@@ -29,11 +28,6 @@ const WatchlistRoute = WatchlistRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DmcaRoute = DmcaRouteImport.update({
@@ -82,7 +76,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/dmca': typeof DmcaRoute
-  '/search': typeof SearchRoute
   '/terms': typeof TermsRoute
   '/watchlist': typeof WatchlistRoute
   '/browse/$type': typeof BrowseTypeRoute
@@ -95,7 +88,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/dmca': typeof DmcaRoute
-  '/search': typeof SearchRoute
   '/terms': typeof TermsRoute
   '/watchlist': typeof WatchlistRoute
   '/browse/$type': typeof BrowseTypeRoute
@@ -109,7 +101,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/dmca': typeof DmcaRoute
-  '/search': typeof SearchRoute
   '/terms': typeof TermsRoute
   '/watchlist': typeof WatchlistRoute
   '/browse/$type': typeof BrowseTypeRoute
@@ -124,7 +115,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/dmca'
-    | '/search'
     | '/terms'
     | '/watchlist'
     | '/browse/$type'
@@ -137,7 +127,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/dmca'
-    | '/search'
     | '/terms'
     | '/watchlist'
     | '/browse/$type'
@@ -150,7 +139,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/dmca'
-    | '/search'
     | '/terms'
     | '/watchlist'
     | '/browse/$type'
@@ -164,7 +152,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
   DmcaRoute: typeof DmcaRoute
-  SearchRoute: typeof SearchRoute
   TermsRoute: typeof TermsRoute
   WatchlistRoute: typeof WatchlistRoute
   BrowseTypeRoute: typeof BrowseTypeRoute
@@ -187,13 +174,6 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dmca': {
@@ -260,7 +240,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
   DmcaRoute: DmcaRoute,
-  SearchRoute: SearchRoute,
   TermsRoute: TermsRoute,
   WatchlistRoute: WatchlistRoute,
   BrowseTypeRoute: BrowseTypeRoute,

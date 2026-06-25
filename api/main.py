@@ -33,7 +33,7 @@ from database import (
     get_movies_by_tmdb_id,
     link_tmdb_id_to_movies,
 )
-from scheduler import run_spider, start_scheduler, stop_scheduler
+from scheduler import run_spider
 from tmdb_client import get_title_by_id
 
 # ── Logging ──────────────────────────────────────────────────────────
@@ -65,15 +65,8 @@ class DownloadLink(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Start the background scheduler on startup, stop on shutdown."""
-    log.info("Starting background scheduler...")
-    start_scheduler(
-        interval_hours=settings.SCRAPE_INTERVAL_HOURS,
-        max_pages=settings.MAX_CRAWL_PAGES,
-    )
+    """Lifespan events."""
     yield
-    log.info("Shutting down scheduler...")
-    stop_scheduler()
 
 
 # ── App ──────────────────────────────────────────────────────────────
